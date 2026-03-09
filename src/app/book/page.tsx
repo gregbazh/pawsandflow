@@ -235,11 +235,15 @@ export default function BookPage() {
                         <div className={`text-base font-bold ${isSelected ? "text-white" : "text-warm-900"}`}>
                           {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </div>
-                        {!isAvailable && (
-                          <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-warm-800/45">
+                        {!isAvailable ? (
+                          <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-red-500">
                             Sold Out
                           </div>
-                        )}
+                        ) : !isSelected ? (
+                          <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-500">
+                            Available
+                          </div>
+                        ) : null}
                       </button>
                     );
                   })}
