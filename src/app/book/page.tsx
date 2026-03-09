@@ -3,16 +3,8 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
 import {
-  PawPrint,
-  CalendarDays,
-  Clock,
-  Users,
-  MapPin,
   ArrowLeft,
-  CheckCircle2,
   Loader2,
   Star,
   ChevronLeft,
@@ -21,21 +13,19 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import CheckoutForm from "@/components/CheckoutForm";
 import {
   BRAND,
   BOOKING_WINDOWS,
   CLASS_TIMES,
   REVIEWS,
-  formatDate,
-  formatDateLong,
   parseDateString,
 } from "@/lib/constants";
 import { IMAGES } from "@/lib/images";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-);
+const selectStyles =
+  "w-full px-3 py-2.5 text-sm rounded-lg border border-warm-200 bg-white text-warm-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent appearance-none cursor-pointer bg-[length:12px] bg-[right_10px_center] bg-no-repeat";
+const selectBg =
+  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%239ca3af\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")';
 
 function PromoBanner() {
   return (
@@ -137,6 +127,13 @@ function ReviewCarousel() {
   );
 }
 
+const THUMBNAILS = [
+  IMAGES.bookingSidebar,
+  IMAGES.gallery1,
+  IMAGES.gallery2,
+  IMAGES.gallery5,
+];
+
 export default function BookPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -144,13 +141,7 @@ export default function BookPage() {
   const [error, setError] = useState<string | null>(null);
   const [realSpots, setRealSpots] = useState<Record<string, number> | null>(null);
   const [loadingSpots, setLoadingSpots] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
-  const [creatingIntent, setCreatingIntent] = useState(false);
-
-  const selectedDateObj = selectedDate ? parseDateString(selectedDate) : null;
-  const selectedTimeObj = CLASS_TIMES.find((t) => t.id === selectedTime);
+  const [mainImage, setMainImage] = useState<string>(IMAGES.bookingSidebar);
 
   const fallbackSpots = useMemo(() => {
     const map: Record<string, number> = {};
@@ -187,45 +178,6 @@ export default function BookPage() {
     }
   }, [selectedDate, fetchAvailability]);
 
-  // Auto-create PaymentIntent when date + time selected
-  useEffect(() => {
-    if (!selectedDate || !selectedTime) {
-      setClientSecret(null);
-      setPaymentIntentId(null);
-      return;
-    }
-
-    let cancelled = false;
-    setCreatingIntent(true);
-    setError(null);
-
-    fetch("/api/create-payment-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: selectedDate, timeSlot: selectedTime }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (cancelled) return;
-        if (data.clientSecret && data.paymentIntentId) {
-          setClientSecret(data.clientSecret);
-          setPaymentIntentId(data.paymentIntentId);
-        } else {
-          setError(data.message || "Failed to load checkout.");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError("Network error. Please try again.");
-      })
-      .finally(() => {
-        if (!cancelled) setCreatingIntent(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedDate, selectedTime]);
-
   function getSpots(timeId: string): number {
     if (realSpots && realSpots[timeId] !== undefined) {
       return realSpots[timeId];
@@ -233,300 +185,211 @@ export default function BookPage() {
     return fallbackSpots[timeId] ?? BRAND.spotsPerClass;
   }
 
+  const spotsForSelected = selectedTime ? getSpots(selectedTime) : 0;
+  const hasLimitedSpots = selectedDate && selectedTime && spotsForSelected > 0 && spotsForSelected <= 5;
+
+  async function handleBookNow() {
+    if (!selectedDate || !selectedTime) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: selectedDate, timeSlot: selectedTime }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("Failed to create checkout.");
+        setLoading(false);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <PromoBanner />
       <Header />
-      <main className="min-h-screen pt-32 pb-16 bg-warm-50">
-        <div className="max-w-5xl mx-auto px-6">
+      <main className="min-h-screen pt-32 pb-16 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-warm-800/50 hover:text-amber-600 transition-colors mb-10"
+            className="inline-flex items-center gap-1.5 text-sm text-warm-800/50 hover:text-amber-600 transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
 
-          <div className="grid lg:grid-cols-3 gap-10">
-            {/* Left: Selection */}
-            <div className="lg:col-span-2 space-y-10">
-              {/* Promo */}
-              <div className="bg-gradient-to-r from-amber-50 to-rose-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
-                  <Gift className="w-5 h-5 text-rose-500" />
-                </div>
-                <div>
-                  <span className="font-semibold text-warm-900 text-sm">Bring a Friend for Free</span>
-                  <span className="text-warm-800/60 text-sm ml-1">— book one, bring one at no extra cost.</span>
-                </div>
+          {/* Product layout: image left, details right */}
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+            {/* Left: Images */}
+            <div className="space-y-3">
+              <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-warm-50">
+                <Image
+                  src={mainImage}
+                  alt="Puppy yoga class"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                />
               </div>
-
-              {/* Step 1: Date */}
-              <div>
-                <h2 className="text-lg font-bold text-warm-900 mb-5">
-                  <span className="gradient-text mr-2">1.</span>
-                  Pick a Date
-                </h2>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {BOOKING_WINDOWS.map((bookingWindow) => {
-                    const date = parseDateString(bookingWindow.date);
-                    const dateStr = bookingWindow.date;
-                    const isSelected = selectedDate === dateStr;
-                    const isAvailable = bookingWindow.status === "available";
-                    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-                    const isSat = date.getDay() === 6;
-
-                    return (
-                      <button
-                        key={dateStr}
-                        disabled={!isAvailable}
-                        onClick={() => {
-                          if (!isAvailable) return;
-                          setSelectedDate(dateStr);
-                          setSelectedTime(null);
-                          setRealSpots(null);
-                          setError(null);
-                          setClientSecret(null);
-                          setPaymentIntentId(null);
-                        }}
-                        className={`rounded-2xl p-4 text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? "cta-gradient text-white shadow-lg shadow-amber-500/20"
-                            : isAvailable
-                              ? "bg-white border border-amber-100 hover:border-amber-300"
-                              : "bg-warm-100 border border-warm-200 text-warm-800/40 cursor-not-allowed"
-                        }`}
-                      >
-                        <div className={`text-xs font-medium mb-1 ${
-                          isSelected ? "text-white/70" : isSat ? "text-amber-500" : "text-rose-400"
-                        }`}>
-                          {dayName}
-                        </div>
-                        <div className={`text-base font-bold ${isSelected ? "text-white" : "text-warm-900"}`}>
-                          {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                        </div>
-                        {!isAvailable ? (
-                          <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-red-500">
-                            Sold Out
-                          </div>
-                        ) : !isSelected ? (
-                          <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-500">
-                            Available
-                          </div>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Step 2: Time */}
-              <div
-                className={`transition-all duration-300 ${
-                  selectedDate ? "opacity-100" : "opacity-30 pointer-events-none"
-                }`}
-              >
-                <h2 className="text-lg font-bold text-warm-900 mb-5">
-                  <span className="gradient-text mr-2">2.</span>
-                  Pick a Time
-                </h2>
-
-                {loadingSpots ? (
-                  <div className="flex items-center gap-2 text-warm-800/50 py-8">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Checking availability...</span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {CLASS_TIMES.map((time) => {
-                      const isSelected = selectedTime === time.id;
-                      const spots = getSpots(time.id);
-                      const isFull = spots <= 0;
-                      const showSpots = spots <= 5 && spots > 0;
-
-                      return (
-                        <button
-                          key={time.id}
-                          disabled={isFull}
-                          onClick={() => {
-                            if (!isFull) {
-                              setSelectedTime(time.id);
-                              setError(null);
-                              setClientSecret(null);
-                              setPaymentIntentId(null);
-                            }
-                          }}
-                          className={`rounded-2xl p-5 text-left transition-all cursor-pointer ${
-                            isFull
-                              ? "bg-warm-100 border border-warm-200 text-warm-800/40 cursor-not-allowed"
-                              : isSelected
-                                ? "cta-gradient text-white shadow-lg shadow-amber-500/20"
-                                : "bg-white border border-amber-100 hover:border-amber-300"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Clock className={`w-4 h-4 ${isFull ? "text-warm-800/30" : isSelected ? "text-white/60" : "text-amber-400"}`} />
-                              <span className={`text-lg font-bold ${isFull ? "text-warm-800/40" : isSelected ? "text-white" : "text-warm-900"}`}>
-                                {time.label}
-                              </span>
-                            </div>
-                            {isSelected && <CheckCircle2 className="w-5 h-5 text-white/80" />}
-                            {isFull && (
-                              <span className="text-[11px] font-semibold uppercase text-red-500">Sold Out</span>
-                            )}
-                          </div>
-                          {showSpots && (
-                            <div className={`text-xs mt-2 flex items-center gap-1 ${
-                              isSelected ? "text-white/60" : "text-rose-500 font-medium"
-                            }`}>
-                              <Users className="w-3 h-3" />
-                              Only {spots} spot{spots !== 1 ? "s" : ""} left
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {THUMBNAILS.map((src) => (
+                  <button
+                    key={src}
+                    type="button"
+                    onClick={() => setMainImage(src)}
+                    className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                      mainImage === src ? "border-amber-500" : "border-transparent hover:border-amber-200"
+                    }`}
+                  >
+                    <Image
+                      src={src}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Right: Summary */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-36 bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden">
-                <div className="relative h-40 w-full">
-                  <Image
-                    src={IMAGES.bookingSidebar}
-                    alt="Puppy"
-                    fill
-                    className="object-cover"
-                    sizes="400px"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  <div className="absolute bottom-4 left-5 text-white">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <PawPrint className="w-4 h-4" />
-                      <span className="font-bold">Puppy & Flow</span>
-                    </div>
-                    <p className="text-white/70 text-xs">Puppy Yoga · West Hollywood</p>
-                  </div>
+            {/* Right: Product info + checkout */}
+            <div className="flex flex-col">
+              <p className="text-xs font-medium text-warm-800/50 uppercase tracking-wider mb-1">
+                West Hollywood, Los Angeles
+              </p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-warm-900 mb-2">
+                Puppy Yoga Class (1h)
+              </h1>
+              <p className="text-lg font-semibold text-warm-900 mb-6">
+                ${BRAND.price}.00 USD
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="date-select" className="block text-xs font-medium text-warm-800/60 mb-1">
+                    Choose your date
+                  </label>
+                  <select
+                    id="date-select"
+                    value={selectedDate ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value || null;
+                      setSelectedDate(val);
+                      setSelectedTime(null);
+                      setRealSpots(null);
+                      setError(null);
+                    }}
+                    className={selectStyles}
+                    style={{ backgroundImage: selectBg }}
+                  >
+                    <option value="">Select date</option>
+                    {BOOKING_WINDOWS.map((bookingWindow) => {
+                      const date = parseDateString(bookingWindow.date);
+                      const dateStr = bookingWindow.date;
+                      const isAvailable = bookingWindow.status === "available";
+                      const label = `${date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}${isAvailable ? "" : " — Sold Out"}`;
+                      return (
+                        <option key={dateStr} value={dateStr} disabled={!isAvailable}>
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CalendarDays className="w-4 h-4 text-amber-500 mt-1 shrink-0" />
-                    <div>
-                      <div className="text-xs text-warm-800/50">Date</div>
-                      <div className="font-semibold text-warm-900 text-sm">
-                        {selectedDateObj ? formatDateLong(selectedDateObj) : "—"}
-                      </div>
-                    </div>
+                <div className={selectedDate ? "" : "opacity-50 pointer-events-none"}>
+                  <label htmlFor="time-select" className="block text-xs font-medium text-warm-800/60 mb-1">
+                    Choose your timeslot
+                  </label>
+                  <select
+                    id="time-select"
+                    value={selectedTime ?? ""}
+                    onChange={(e) => {
+                      setSelectedTime(e.target.value || null);
+                      setError(null);
+                    }}
+                    disabled={!selectedDate}
+                    className={selectStyles}
+                    style={{ backgroundImage: selectBg }}
+                  >
+                    <option value="">Select time</option>
+                    {loadingSpots ? (
+                      <option value="" disabled>Checking...</option>
+                    ) : (
+                      CLASS_TIMES.map((time) => {
+                        const spots = getSpots(time.id);
+                        const isFull = spots <= 0;
+                        const label = isFull ? `${time.label} — Sold Out` : (spots <= 5 ? `${time.label} (${spots} left)` : time.label);
+                        return (
+                          <option key={time.id} value={time.id} disabled={isFull}>
+                            {label}
+                          </option>
+                        );
+                      })
+                    )}
+                  </select>
+                </div>
+
+                {selectedDate && selectedTime && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-warm-800/70">
+                      {hasLimitedSpots ? "Limited spots available" : "Spots available"}
+                    </span>
                   </div>
+                )}
 
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-4 h-4 text-amber-500 mt-1 shrink-0" />
-                    <div>
-                      <div className="text-xs text-warm-800/50">Time</div>
-                      <div className="font-semibold text-warm-900 text-sm">
-                        {selectedTimeObj ? `${selectedTimeObj.label} (1 hour)` : "—"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-amber-500 mt-1 shrink-0" />
-                    <div>
-                      <div className="text-xs text-warm-800/50">Location</div>
-                      <div className="font-semibold text-warm-900 text-sm">{BRAND.location}</div>
-                      <div className="text-xs text-warm-800/40 mt-0.5">Address sent after booking</div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-amber-100 pt-4 space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-warm-800/60">Puppy Yoga Class</span>
-                      <span className="font-bold text-warm-900">${BRAND.price}.00</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-warm-800/60">+ 1 Friend</span>
-                      <span className="font-bold text-emerald-600">FREE</span>
-                    </div>
-                  </div>
-
-                  {selectedDate && selectedTime && (
-                    <>
-                      <div>
-                        <label htmlFor="booking-email" className="block text-xs text-warm-800/50 mb-1.5">
-                          Email for confirmation
-                        </label>
-                        <input
-                          id="booking-email"
-                          type="email"
-                          required
-                          placeholder="you@example.com"
-                          value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            try {
-                              sessionStorage.setItem("booking_email", e.target.value);
-                            } catch {
-                              // ignore
-                            }
-                          }}
-                          className="w-full px-4 py-3 rounded-2xl border border-amber-200 text-warm-900 placeholder:text-warm-800/40 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600 font-medium">
-                      {error}
-                    </div>
-                  )}
-
-                  {creatingIntent && selectedDate && selectedTime ? (
-                    <div className="flex items-center gap-2 text-warm-800/50 py-6">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-sm">Loading payment options...</span>
-                    </div>
-                  ) : clientSecret && paymentIntentId ? (
-                    <Elements
-                      stripe={stripePromise}
-                      options={{
-                        clientSecret,
-                        appearance: {
-                          theme: "stripe",
-                          variables: {
-                            colorPrimary: "#f59e0b",
-                            borderRadius: "16px",
-                          },
-                        },
-                      }}
-                    >
-                      <CheckoutForm
-                        paymentIntentId={paymentIntentId}
-                        onError={(msg) => setError(msg)}
-                      />
-                    </Elements>
-                  ) : selectedDate && selectedTime ? null : (
-                    <p className="text-sm text-warm-800/40 py-4 text-center">
-                      Select a date and time to continue
-                    </p>
-                  )}
-
-                  <p className="text-xs text-center text-warm-800/40">
-                    Secure checkout · Powered by Stripe
-                  </p>
+                <div className="text-xs text-warm-800/50 py-1">
+                  + 1 Friend FREE — book one, bring one
                 </div>
               </div>
+
+              {error && (
+                <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handleBookNow}
+                disabled={!selectedDate || !selectedTime || loading}
+                className="mt-8 w-full py-3.5 rounded-xl cta-gradient text-white font-bold text-base shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Redirecting to checkout...
+                  </span>
+                ) : (
+                  "Book Now"
+                )}
+              </button>
+
+              <p className="mt-3 text-xs text-center text-warm-800/40">
+                Secure checkout · Powered by Stripe
+              </p>
             </div>
           </div>
 
           <ReviewCarousel />
-
         </div>
       </main>
       <Footer />
