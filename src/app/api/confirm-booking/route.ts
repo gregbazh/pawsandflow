@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { sessionId, paymentIntentId } = body;
+    const { sessionId, paymentIntentId, email: customerEmailParam } = body;
 
     if (!sessionId && !paymentIntentId) {
       return NextResponse.json(
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       date = paymentIntent.metadata?.date;
       timeSlot = paymentIntent.metadata?.timeSlot;
       timeLabel = paymentIntent.metadata?.timeLabel;
+      customerEmail = customerEmailParam ?? paymentIntent.receipt_email ?? null;
     } else if (sessionId) {
       // Redirect Checkout flow
       stripeId = sessionId;
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       date = session.metadata?.date;
       timeSlot = session.metadata?.timeSlot;
       timeLabel = session.metadata?.timeLabel;
-      customerEmail = session.customer_details?.email ?? null;
+      customerEmail = customerEmailParam ?? session.customer_details?.email ?? null;
     } else {
       return NextResponse.json(
         { message: "Invalid request." },

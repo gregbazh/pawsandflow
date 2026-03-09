@@ -35,11 +35,21 @@ function SuccessContent() {
     async function confirmBooking() {
       setConfirming(true);
       try {
+        let email: string | null = null;
+        try {
+          email = sessionStorage.getItem("booking_email");
+          if (email) sessionStorage.removeItem("booking_email");
+        } catch {
+          // ignore
+        }
+
         const res = await fetch("/api/confirm-booking", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(
-            sessionId ? { sessionId } : { paymentIntentId }
+            sessionId
+              ? { sessionId, email }
+              : { paymentIntentId, email }
           ),
         });
         const data = await res.json();

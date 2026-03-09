@@ -146,6 +146,8 @@ export default function BookPage() {
   const [loadingSpots, setLoadingSpots] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [creatingIntent, setCreatingIntent] = useState(false);
 
   const selectedDateObj = selectedDate ? parseDateString(selectedDate) : null;
   const selectedTimeObj = CLASS_TIMES.find((t) => t.id === selectedTime);
@@ -185,53 +187,50 @@ export default function BookPage() {
     }
   }, [selectedDate, fetchAvailability]);
 
+  // Auto-create PaymentIntent when date + time selected
+  useEffect(() => {
+    if (!selectedDate || !selectedTime) {
+      setClientSecret(null);
+      setPaymentIntentId(null);
+      return;
+    }
+
+    let cancelled = false;
+    setCreatingIntent(true);
+    setError(null);
+
+    fetch("/api/create-payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: selectedDate, timeSlot: selectedTime }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.clientSecret && data.paymentIntentId) {
+          setClientSecret(data.clientSecret);
+          setPaymentIntentId(data.paymentIntentId);
+        } else {
+          setError(data.message || "Failed to load checkout.");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError("Network error. Please try again.");
+      })
+      .finally(() => {
+        if (!cancelled) setCreatingIntent(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate, selectedTime]);
+
   function getSpots(timeId: string): number {
     if (realSpots && realSpots[timeId] !== undefined) {
       return realSpots[timeId];
     }
     return fallbackSpots[timeId] ?? BRAND.spotsPerClass;
-  }
-
-  async function handleBookNow() {
-    if (!selectedDate || !selectedTime) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/create-payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: selectedDate,
-          timeSlot: selectedTime,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Something went wrong. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      if (data.clientSecret && data.paymentIntentId) {
-        setClientSecret(data.clientSecret);
-        setPaymentIntentId(data.paymentIntentId);
-      } else {
-        setError("Failed to start checkout.");
-      }
-      setLoading(false);
-    } catch {
-      setError("Network error. Please try again.");
-      setLoading(false);
-    }
-  }
-
-  function handlePaymentCancel() {
-    setClientSecret(null);
-    setPaymentIntentId(null);
-    setError(null);
   }
 
   return (
@@ -288,6 +287,8 @@ export default function BookPage() {
                           setSelectedTime(null);
                           setRealSpots(null);
                           setError(null);
+                          setClientSecret(null);
+                          setPaymentIntentId(null);
                         }}
                         className={`rounded-2xl p-4 text-center transition-all cursor-pointer ${
                           isSelected
@@ -352,6 +353,8 @@ export default function BookPage() {
                             if (!isFull) {
                               setSelectedTime(time.id);
                               setError(null);
+                              setClientSecret(null);
+                              setPaymentIntentId(null);
                             }
                           }}
                           className={`rounded-2xl p-5 text-left transition-all cursor-pointer ${
@@ -452,13 +455,44 @@ export default function BookPage() {
                     </div>
                   </div>
 
+                  {selectedDate && selectedTime && (
+                    <>
+                      <div>
+                        <label htmlFor="booking-email" className="block text-xs text-warm-800/50 mb-1.5">
+                          Email for confirmation
+                        </label>
+                        <input
+                          id="booking-email"
+                          type="email"
+                          required
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            try {
+                              sessionStorage.setItem("booking_email", e.target.value);
+                            } catch {
+                              // ignore
+                            }
+                          }}
+                          className="w-full px-4 py-3 rounded-2xl border border-amber-200 text-warm-900 placeholder:text-warm-800/40 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                        />
+                      </div>
+                    </>
+                  )}
+
                   {error && (
                     <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600 font-medium">
                       {error}
                     </div>
                   )}
 
-                  {clientSecret && paymentIntentId ? (
+                  {creatingIntent && selectedDate && selectedTime ? (
+                    <div className="flex items-center gap-2 text-warm-800/50 py-6">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Loading payment options...</span>
+                    </div>
+                  ) : clientSecret && paymentIntentId ? (
                     <Elements
                       stripe={stripePromise}
                       options={{
@@ -474,29 +508,13 @@ export default function BookPage() {
                     >
                       <CheckoutForm
                         paymentIntentId={paymentIntentId}
-                        onCancel={handlePaymentCancel}
                         onError={(msg) => setError(msg)}
                       />
                     </Elements>
-                  ) : (
-                    <button
-                      onClick={handleBookNow}
-                      disabled={!selectedDate || !selectedTime || loading}
-                      className={`w-full py-3.5 rounded-2xl text-white font-bold text-base transition-all ${
-                        selectedDate && selectedTime && !loading
-                          ? "cta-gradient shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] cursor-pointer"
-                          : "bg-warm-200 text-warm-800/30 cursor-not-allowed"
-                      }`}
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Processing...
-                        </span>
-                      ) : (
-                        "Book Now"
-                      )}
-                    </button>
+                  ) : selectedDate && selectedTime ? null : (
+                    <p className="text-sm text-warm-800/40 py-4 text-center">
+                      Select a date and time to continue
+                    </p>
                   )}
 
                   <p className="text-xs text-center text-warm-800/40">
@@ -509,26 +527,6 @@ export default function BookPage() {
 
           <ReviewCarousel />
 
-          {/* Mobile sticky checkout */}
-          {selectedDate && selectedTime && !clientSecret && (
-            <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white/95 backdrop-blur-xl border-t border-amber-100 p-4 z-40">
-              <div className="flex items-center justify-between max-w-lg mx-auto">
-                <div>
-                  <div className="font-bold text-warm-900 text-sm">
-                    {selectedDateObj && formatDate(selectedDateObj)} · {selectedTimeObj?.label}
-                  </div>
-                  <div className="text-xs text-warm-800/50">{BRAND.location}</div>
-                </div>
-                <button
-                  onClick={handleBookNow}
-                  disabled={loading || !selectedDate || !selectedTime}
-                  className="cta-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-lg cursor-pointer"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Book Now"}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </main>
       <Footer />
