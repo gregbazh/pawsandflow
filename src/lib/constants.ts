@@ -19,23 +19,21 @@ export const CLASS_TIMES = [
 
 export type ClassTime = (typeof CLASS_TIMES)[number];
 
-export function getUpcomingWeekends(count: number = 8): Date[] {
-  const dates: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const current = new Date(today);
+export const BOOKING_WINDOWS = [
+  { date: "2026-03-13", status: "booked" },
+  { date: "2026-03-20", status: "booked" },
+  { date: "2026-03-27", status: "booked" },
+  { date: "2026-03-28", status: "available" },
+  { date: "2026-04-03", status: "unavailable" },
+  { date: "2026-04-10", status: "unavailable" },
+  { date: "2026-04-17", status: "unavailable" },
+  { date: "2026-04-24", status: "unavailable" },
+] as const;
 
-  while (dates.length < count) {
-    const day = current.getDay();
-    if (day === 0 || day === 6) {
-      if (current >= today) {
-        dates.push(new Date(current));
-      }
-    }
-    current.setDate(current.getDate() + 1);
-  }
+export type BookingWindow = (typeof BOOKING_WINDOWS)[number];
 
-  return dates;
+export function parseDateString(dateString: string): Date {
+  return new Date(`${dateString}T12:00:00`);
 }
 
 export function formatDate(date: Date): string {

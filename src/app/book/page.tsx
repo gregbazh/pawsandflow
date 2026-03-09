@@ -21,12 +21,12 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
   BRAND,
+  BOOKING_WINDOWS,
   CLASS_TIMES,
   REVIEWS,
-  getUpcomingWeekends,
   formatDate,
   formatDateLong,
-  dateToString,
+  parseDateString,
 } from "@/lib/constants";
 import { IMAGES } from "@/lib/images";
 
@@ -135,18 +135,16 @@ export default function BookPage() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const weekends = useMemo(() => getUpcomingWeekends(8), []);
-
-  const selectedDateObj = weekends.find(
-    (d) => dateToString(d) === selectedDate
-  );
+  const selectedDateObj = selectedDate ? parseDateString(selectedDate) : null;
   const selectedTimeObj = CLASS_TIMES.find((t) => t.id === selectedTime);
 
   const spotsRemaining = useMemo(() => {
     const map: Record<string, number> = {};
-    weekends.forEach((d) => {
+    BOOKING_WINDOWS.forEach((bookingWindow) => {
+      if (bookingWindow.status !== "available") return;
+
       CLASS_TIMES.forEach((t) => {
-        const key = `${dateToString(d)}-${t.id}`;
+        const key = `${bookingWindow.date}-${t.id}`;
         map[key] = BRAND.spotsPerClass - Math.floor(Math.random() * 8);
       });
     });
@@ -204,23 +202,29 @@ export default function BookPage() {
                 </h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {weekends.map((date) => {
-                    const dateStr = dateToString(date);
+                  {BOOKING_WINDOWS.map((bookingWindow) => {
+                    const date = parseDateString(bookingWindow.date);
+                    const dateStr = bookingWindow.date;
                     const isSelected = selectedDate === dateStr;
+                    const isAvailable = bookingWindow.status === "available";
                     const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
                     const isSat = date.getDay() === 6;
 
                     return (
                       <button
                         key={dateStr}
+                        disabled={!isAvailable}
                         onClick={() => {
+                          if (!isAvailable) return;
                           setSelectedDate(dateStr);
                           setSelectedTime(null);
                         }}
                         className={`rounded-2xl p-4 text-center transition-all cursor-pointer ${
                           isSelected
                             ? "cta-gradient text-white shadow-lg shadow-amber-500/20"
-                            : "bg-white border border-amber-100 hover:border-amber-300"
+                            : isAvailable
+                              ? "bg-white border border-amber-100 hover:border-amber-300"
+                              : "bg-warm-100 border border-warm-200 text-warm-800/40 cursor-not-allowed"
                         }`}
                       >
                         <div className={`text-xs font-medium mb-1 ${
@@ -231,6 +235,11 @@ export default function BookPage() {
                         <div className={`text-base font-bold ${isSelected ? "text-white" : "text-warm-900"}`}>
                           {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </div>
+                        {!isAvailable && (
+                          <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-warm-800/45">
+                            Sold Out
+                          </div>
+                        )}
                       </button>
                     );
                   })}
