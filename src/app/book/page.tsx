@@ -5,11 +5,14 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft,
+  Clock,
   Loader2,
   Star,
   ChevronLeft,
   ChevronRight,
   Gift,
+  CheckCircle2,
+  Users,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -283,69 +286,193 @@ export default function BookPage() {
               </p>
 
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="date-select" className="block text-xs font-medium text-warm-800/60 mb-1">
-                    Choose your date
-                  </label>
-                  <select
-                    id="date-select"
-                    value={selectedDate ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value || null;
-                      setSelectedDate(val);
-                      setSelectedTime(null);
-                      setRealSpots(null);
-                      setError(null);
-                    }}
-                    className={selectStyles}
-                    style={{ backgroundImage: selectBg }}
-                  >
-                    <option value="">Select date</option>
-                    {BOOKING_WINDOWS.map((bookingWindow) => {
-                      const date = parseDateString(bookingWindow.date);
-                      const dateStr = bookingWindow.date;
-                      const isAvailable = bookingWindow.status === "available";
-                      const label = `${date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}${isAvailable ? "" : " — Sold Out"}`;
-                      return (
-                        <option key={dateStr} value={dateStr} disabled={!isAvailable}>
-                          {label}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div className={selectedDate ? "" : "opacity-50 pointer-events-none"}>
-                  <label htmlFor="time-select" className="block text-xs font-medium text-warm-800/60 mb-1">
-                    Choose your timeslot
-                  </label>
-                  <select
-                    id="time-select"
-                    value={selectedTime ?? ""}
-                    onChange={(e) => {
-                      setSelectedTime(e.target.value || null);
-                      setError(null);
-                    }}
-                    disabled={!selectedDate}
-                    className={selectStyles}
-                    style={{ backgroundImage: selectBg }}
-                  >
-                    <option value="">Select time</option>
-                    {loadingSpots ? (
-                      <option value="" disabled>Checking...</option>
-                    ) : (
-                      CLASS_TIMES.map((time) => {
-                        const spots = getSpots(time.id);
-                        const isFull = spots <= 0;
-                        const label = isFull ? `${time.label} — Sold Out` : (spots <= 5 ? `${time.label} (${spots} left)` : time.label);
+                {/* Mobile: compact dropdowns */}
+                <div className="md:hidden space-y-4">
+                  <div>
+                    <label htmlFor="date-select" className="block text-xs font-medium text-warm-800/60 mb-1">
+                      Choose your date
+                    </label>
+                    <select
+                      id="date-select"
+                      value={selectedDate ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value || null;
+                        setSelectedDate(val);
+                        setSelectedTime(null);
+                        setRealSpots(null);
+                        setError(null);
+                      }}
+                      className={selectStyles}
+                      style={{ backgroundImage: selectBg }}
+                    >
+                      <option value="">Select date</option>
+                      {BOOKING_WINDOWS.map((bookingWindow) => {
+                        const date = parseDateString(bookingWindow.date);
+                        const dateStr = bookingWindow.date;
+                        const isAvailable = bookingWindow.status === "available";
+                        const label = `${date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}${isAvailable ? "" : " — Sold Out"}`;
                         return (
-                          <option key={time.id} value={time.id} disabled={isFull}>
+                          <option key={dateStr} value={dateStr} disabled={!isAvailable}>
                             {label}
                           </option>
                         );
-                      })
-                    )}
-                  </select>
+                      })}
+                    </select>
+                  </div>
+
+                  <div className={selectedDate ? "" : "opacity-50 pointer-events-none"}>
+                    <label htmlFor="time-select" className="block text-xs font-medium text-warm-800/60 mb-1">
+                      Choose your timeslot
+                    </label>
+                    <select
+                      id="time-select"
+                      value={selectedTime ?? ""}
+                      onChange={(e) => {
+                        setSelectedTime(e.target.value || null);
+                        setError(null);
+                      }}
+                      disabled={!selectedDate}
+                      className={selectStyles}
+                      style={{ backgroundImage: selectBg }}
+                    >
+                      <option value="">Select time</option>
+                      {loadingSpots ? (
+                        <option value="" disabled>Checking...</option>
+                      ) : (
+                        CLASS_TIMES.map((time) => {
+                          const spots = getSpots(time.id);
+                          const isFull = spots <= 0;
+                          const label = isFull ? `${time.label} — Sold Out` : (spots <= 5 ? `${time.label} (${spots} left)` : time.label);
+                          return (
+                            <option key={time.id} value={time.id} disabled={isFull}>
+                              {label}
+                            </option>
+                          );
+                        })
+                      )}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Desktop: date blocks */}
+                <div className="hidden md:block">
+                  <label className="block text-xs font-medium text-warm-800/60 mb-2">
+                    Choose your date
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {BOOKING_WINDOWS.map((bookingWindow) => {
+                      const date = parseDateString(bookingWindow.date);
+                      const dateStr = bookingWindow.date;
+                      const isSelected = selectedDate === dateStr;
+                      const isAvailable = bookingWindow.status === "available";
+                      const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+                      const isSat = date.getDay() === 6;
+
+                      return (
+                        <button
+                          key={dateStr}
+                          type="button"
+                          disabled={!isAvailable}
+                          onClick={() => {
+                            if (!isAvailable) return;
+                            setSelectedDate(dateStr);
+                            setSelectedTime(null);
+                            setRealSpots(null);
+                            setError(null);
+                          }}
+                          className={`rounded-xl p-3 text-center transition-all cursor-pointer ${
+                            isSelected
+                              ? "cta-gradient text-white shadow-lg shadow-amber-500/20"
+                              : isAvailable
+                                ? "bg-white border border-amber-100 hover:border-amber-300"
+                                : "bg-warm-100 border border-warm-200 text-warm-800/40 cursor-not-allowed"
+                          }`}
+                        >
+                          <div className={`text-xs font-medium mb-0.5 ${
+                            isSelected ? "text-white/70" : isSat ? "text-amber-500" : "text-rose-400"
+                          }`}>
+                            {dayName}
+                          </div>
+                          <div className={`text-sm font-bold ${isSelected ? "text-white" : "text-warm-900"}`}>
+                            {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </div>
+                          {!isAvailable ? (
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-red-500">
+                              Sold Out
+                            </div>
+                          ) : !isSelected ? (
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">
+                              Available
+                            </div>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Desktop: time blocks */}
+                <div className={`hidden md:block transition-opacity ${selectedDate ? "" : "opacity-50 pointer-events-none"}`}>
+                  <label className="block text-xs font-medium text-warm-800/60 mb-2">
+                    Choose your timeslot
+                  </label>
+                  {loadingSpots ? (
+                    <div className="flex items-center gap-2 text-warm-800/50 py-4">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Checking availability...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {CLASS_TIMES.map((time) => {
+                        const isSelected = selectedTime === time.id;
+                        const spots = getSpots(time.id);
+                        const isFull = spots <= 0;
+                        const showSpots = spots <= 5 && spots > 0;
+
+                        return (
+                          <button
+                            key={time.id}
+                            type="button"
+                            disabled={isFull}
+                            onClick={() => {
+                              if (!isFull) {
+                                setSelectedTime(time.id);
+                                setError(null);
+                              }
+                            }}
+                            className={`rounded-xl p-4 text-left transition-all cursor-pointer ${
+                              isFull
+                                ? "bg-warm-100 border border-warm-200 text-warm-800/40 cursor-not-allowed"
+                                : isSelected
+                                  ? "cta-gradient text-white shadow-lg shadow-amber-500/20"
+                                  : "bg-white border border-amber-100 hover:border-amber-300"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Clock className={`w-4 h-4 ${isFull ? "text-warm-800/30" : isSelected ? "text-white/60" : "text-amber-400"}`} />
+                                <span className={`text-sm font-bold ${isFull ? "text-warm-800/40" : isSelected ? "text-white" : "text-warm-900"}`}>
+                                  {time.label}
+                                </span>
+                              </div>
+                              {isSelected && <CheckCircle2 className="w-4 h-4 text-white/80" />}
+                              {isFull && (
+                                <span className="text-[10px] font-semibold uppercase text-red-500">Sold Out</span>
+                              )}
+                            </div>
+                            {showSpots && (
+                              <div className={`text-xs mt-1.5 flex items-center gap-1 ${
+                                isSelected ? "text-white/60" : "text-rose-500 font-medium"
+                              }`}>
+                                <Users className="w-3 h-3" />
+                                Only {spots} spot{spots !== 1 ? "s" : ""} left
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {selectedDate && selectedTime && (
