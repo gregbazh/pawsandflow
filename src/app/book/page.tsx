@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   Loader2,
   Star,
-  Quote,
+  ChevronLeft,
+  ChevronRight,
+  Gift,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -27,6 +29,107 @@ import {
   dateToString,
 } from "@/lib/constants";
 import { IMAGES } from "@/lib/images";
+
+function PromoBanner() {
+  return (
+    <div className="bg-gradient-to-r from-amber-500 to-rose-500 text-white text-center py-2.5 px-4 text-sm font-semibold fixed top-0 left-0 right-0 z-[60]">
+      <div className="flex items-center justify-center gap-2">
+        <Gift className="w-4 h-4" />
+        <span>Bring a Friend for FREE — Limited Time Offer!</span>
+        <Gift className="w-4 h-4" />
+      </div>
+    </div>
+  );
+}
+
+function ReviewCarousel() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  function scroll(direction: "left" | "right") {
+    if (!scrollRef.current) return;
+    const cardWidth = scrollRef.current.querySelector("div")?.offsetWidth ?? 340;
+    const gap = 16;
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -(cardWidth + gap) : cardWidth + gap,
+      behavior: "smooth",
+    });
+  }
+
+  return (
+    <div className="mt-16">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-xl font-bold text-warm-900">
+            What People Are Saying
+          </h3>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+              ))}
+            </div>
+            <span className="text-sm text-warm-800/60">
+              5.0 · {REVIEWS.length} reviews
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => scroll("left")}
+            className="w-10 h-10 rounded-full bg-white border border-amber-100 flex items-center justify-center hover:bg-amber-50 hover:border-amber-300 transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-5 h-5 text-warm-800" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="w-10 h-10 rounded-full bg-white border border-amber-100 flex items-center justify-center hover:bg-amber-50 hover:border-amber-300 transition-colors cursor-pointer"
+          >
+            <ChevronRight className="w-5 h-5 text-warm-800" />
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 -mx-4 px-4"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {REVIEWS.map((review, i) => (
+          <div
+            key={i}
+            className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white rounded-2xl border border-amber-100 overflow-hidden snap-start card-hover"
+          >
+            <div className="relative h-64 w-full">
+              <Image
+                src={IMAGES[review.imageKey]}
+                alt={`Photo from ${review.name}`}
+                fill
+                className="object-cover"
+                sizes="320px"
+              />
+            </div>
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-warm-900 text-sm">
+                  {review.name}
+                </span>
+                <span className="text-xs text-warm-800/40">{review.date}</span>
+              </div>
+              <div className="flex mb-2">
+                {[...Array(review.rating)].map((_, j) => (
+                  <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                ))}
+              </div>
+              <p className="text-sm text-warm-800/70 leading-relaxed">
+                &ldquo;{review.text}&rdquo;
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function BookPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -68,10 +171,10 @@ export default function BookPage() {
 
   return (
     <>
+      <PromoBanner />
       <Header />
-      <main className="min-h-screen pt-24 pb-16 bg-warm-50">
+      <main className="min-h-screen pt-34 pb-16 bg-warm-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          {/* Back link */}
           <Link
             href="/"
             className="inline-flex items-center gap-1 text-sm text-warm-800/50 hover:text-amber-600 transition-colors mb-8"
@@ -83,6 +186,17 @@ export default function BookPage() {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left: Selection */}
             <div className="lg:col-span-2 space-y-8">
+              {/* Promo callout */}
+              <div className="bg-gradient-to-r from-amber-50 to-rose-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+                <div className="bg-white rounded-full p-2 shadow-sm">
+                  <Gift className="w-5 h-5 text-rose-500" />
+                </div>
+                <div>
+                  <span className="font-semibold text-warm-900 text-sm">Bring a Friend for FREE!</span>
+                  <span className="text-warm-800/60 text-sm ml-1">Book one class, bring a friend at no extra cost.</span>
+                </div>
+              </div>
+
               {/* Step 1: Date */}
               <div>
                 <div className="flex items-center gap-3 mb-5">
@@ -172,7 +286,7 @@ export default function BookPage() {
                     const spots = selectedDate
                       ? getSpots(selectedDate, time.id)
                       : BRAND.spotsPerClass;
-                    const spotsLow = spots <= 5;
+                    const showSpots = spots <= 3;
 
                     return (
                       <button
@@ -184,7 +298,7 @@ export default function BookPage() {
                             : "bg-white border-amber-100 hover:border-amber-300 hover:shadow-md"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Clock
                               className={`w-4 h-4 ${
@@ -203,19 +317,18 @@ export default function BookPage() {
                             <CheckCircle2 className="w-5 h-5 text-white" />
                           )}
                         </div>
-                        <div
-                          className={`text-sm flex items-center gap-1 ${
-                            isSelected
-                              ? "text-white/80"
-                              : spotsLow
-                                ? "text-rose-500 font-medium"
-                                : "text-warm-800/50"
-                          }`}
-                        >
-                          <Users className="w-3.5 h-3.5" />
-                          {spots} spot{spots !== 1 ? "s" : ""} left
-                          {spotsLow && !isSelected && " — filling fast!"}
-                        </div>
+                        {showSpots && (
+                          <div
+                            className={`text-sm flex items-center gap-1 mt-2 ${
+                              isSelected
+                                ? "text-white/80"
+                                : "text-rose-500 font-medium"
+                            }`}
+                          >
+                            <Users className="w-3.5 h-3.5" />
+                            Only {spots} spot{spots !== 1 ? "s" : ""} left!
+                          </div>
+                        )}
                       </button>
                     );
                   })}
@@ -225,7 +338,7 @@ export default function BookPage() {
 
             {/* Right: Summary & Checkout */}
             <div className="lg:col-span-1">
-              <div className="sticky top-28 bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden">
+              <div className="sticky top-38 bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden">
                 <div className="relative h-40 w-full">
                   <Image
                     src={IMAGES.bookingSidebar}
@@ -289,6 +402,12 @@ export default function BookPage() {
                         ${BRAND.price}.00
                       </span>
                     </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-warm-800/60 text-sm">+ 1 Friend</span>
+                      <span className="font-bold text-emerald-600 text-sm">
+                        FREE
+                      </span>
+                    </div>
                   </div>
 
                   <button
@@ -306,7 +425,7 @@ export default function BookPage() {
                         Processing...
                       </span>
                     ) : (
-                      `Book Now — $${BRAND.price}`
+                      "Book Now"
                     )}
                   </button>
 
@@ -318,58 +437,7 @@ export default function BookPage() {
             </div>
           </div>
 
-          {/* Reviews */}
-          <div className="mt-16">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-bold text-warm-900">
-                  What People Are Saying
-                </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                  <span className="text-sm text-warm-800/60">
-                    5.0 · {REVIEWS.length} reviews
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {REVIEWS.map((review, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-2xl border border-amber-100 p-5 card-hover relative"
-                >
-                  <Quote className="absolute top-4 right-4 w-8 h-8 text-amber-100" />
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full cta-gradient flex items-center justify-center text-white text-sm font-bold shrink-0">
-                      {review.avatar}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-warm-900 text-sm">
-                        {review.name}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {[...Array(review.rating)].map((_, j) => (
-                          <Star key={j} className="w-3 h-3 text-amber-400 fill-amber-400" />
-                        ))}
-                        <span className="text-xs text-warm-800/40 ml-1">
-                          {review.date}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-warm-800/70 leading-relaxed">
-                    &ldquo;{review.text}&rdquo;
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ReviewCarousel />
 
           {/* Mobile sticky checkout */}
           {selectedDate && selectedTime && (
@@ -381,7 +449,7 @@ export default function BookPage() {
                     {selectedTimeObj?.label}
                   </div>
                   <div className="text-sm text-warm-800/50">
-                    ${BRAND.price}.00 · {BRAND.location}
+                    {BRAND.location}
                   </div>
                 </div>
                 <button

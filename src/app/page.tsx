@@ -7,15 +7,26 @@ import {
   Clock,
   MapPin,
   Calendar,
-  DollarSign,
-  Users,
   ChevronDown,
   Star,
+  Gift,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BRAND, CLASS_TIMES, FAQ_ITEMS } from "@/lib/constants";
+import { BRAND, FAQ_ITEMS } from "@/lib/constants";
 import { IMAGES } from "@/lib/images";
+
+function PromoBanner() {
+  return (
+    <div className="bg-gradient-to-r from-amber-500 to-rose-500 text-white text-center py-2.5 px-4 text-sm font-semibold fixed top-0 left-0 right-0 z-[60]">
+      <div className="flex items-center justify-center gap-2">
+        <Gift className="w-4 h-4" />
+        <span>Bring a Friend for FREE — Limited Time Offer!</span>
+        <Gift className="w-4 h-4" />
+      </div>
+    </div>
+  );
+}
 
 function HeroSection() {
   return (
@@ -27,13 +38,13 @@ function HeroSection() {
         <PawPrint className="absolute bottom-[20%] right-[8%] w-14 h-14 text-rose-300/15 rotate-[-10deg] animate-float" />
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-28 pb-20 relative z-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-34 pb-20 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-2 mb-8 shadow-sm">
               <PawPrint className="w-4 h-4 text-amber-500 animate-paw-bounce" />
               <span className="text-sm font-medium text-warm-800">
-                Now booking in Los Angeles
+                Now booking in West Hollywood
               </span>
               <Sparkles className="w-4 h-4 text-rose-400" />
             </div>
@@ -53,7 +64,7 @@ function HeroSection() {
                 href="/book"
                 className="cta-gradient text-white px-8 py-4 rounded-full text-lg font-bold shadow-xl shadow-amber-500/25 hover:shadow-2xl hover:shadow-amber-500/30 transition-all hover:scale-105 w-full sm:w-auto text-center"
               >
-                Book Your Class — ${BRAND.price}
+                Book Your Class
               </Link>
               <a
                 href="#about"
@@ -75,7 +86,7 @@ function HeroSection() {
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                <span>Los Angeles</span>
+                <span>West Hollywood</span>
               </div>
             </div>
           </div>
@@ -294,7 +305,7 @@ function HowItWorksSection() {
     {
       step: "2",
       title: "Book & Pay",
-      description: `Secure your spot for just $${BRAND.price}. Fast, easy checkout — takes 30 seconds.`,
+      description: "Secure your spot with fast, easy checkout — takes 30 seconds.",
     },
     {
       step: "3",
@@ -345,67 +356,22 @@ function HowItWorksSection() {
   );
 }
 
-function DetailsSection() {
+function BringAFriendSection() {
   return (
     <section className="py-24 bg-warm-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold mb-8 gradient-text">
-              Class Details
-            </h2>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl p-5 border border-amber-100 card-hover">
-                <DollarSign className="w-7 h-7 text-amber-500 mb-2" />
-                <div className="text-2xl font-bold text-warm-900">${BRAND.price}</div>
-                <div className="text-sm text-warm-800/60">per class</div>
-              </div>
-              <div className="bg-white rounded-2xl p-5 border border-amber-100 card-hover">
-                <Clock className="w-7 h-7 text-rose-500 mb-2" />
-                <div className="text-2xl font-bold text-warm-900">{BRAND.classDurationMinutes} min</div>
-                <div className="text-sm text-warm-800/60">per session</div>
-              </div>
-              <div className="bg-white rounded-2xl p-5 border border-amber-100 card-hover">
-                <Users className="w-7 h-7 text-violet-500 mb-2" />
-                <div className="text-2xl font-bold text-warm-900">{BRAND.spotsPerClass} spots</div>
-                <div className="text-sm text-warm-800/60">max per class</div>
-              </div>
-              <div className="bg-white rounded-2xl p-5 border border-amber-100 card-hover">
-                <MapPin className="w-7 h-7 text-emerald-500 mb-2" />
-                <div className="text-2xl font-bold text-warm-900">LA</div>
-                <div className="text-sm text-warm-800/60">Los Angeles, CA</div>
-              </div>
-            </div>
-
-            <div className="mt-8 bg-white rounded-2xl p-6 border border-amber-100">
-              <h3 className="text-base font-bold text-warm-900 mb-4">
-                Class Schedule (Sat & Sun)
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {CLASS_TIMES.map((time) => (
-                  <div
-                    key={time.id}
-                    className="bg-gradient-to-r from-amber-50 to-rose-50 rounded-xl px-4 py-2 text-sm font-semibold text-warm-800"
-                  >
-                    {time.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
           <div className="relative hidden lg:block">
             <div className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden shadow-xl -rotate-2">
               <Image
                 src={IMAGES.gallery1}
-                alt="Happy dog"
+                alt="Friends enjoying puppy yoga"
                 fill
                 className="object-cover"
                 sizes="50vw"
               />
             </div>
-            <div className="absolute -bottom-4 -left-4 w-40 h-40 rounded-2xl overflow-hidden shadow-lg border-4 border-white rotate-3">
+            <div className="absolute -bottom-4 -right-4 w-40 h-40 rounded-2xl overflow-hidden shadow-lg border-4 border-white rotate-3">
               <Image
                 src={IMAGES.gallery4}
                 alt="Cute puppy"
@@ -414,6 +380,46 @@ function DetailsSection() {
                 sizes="200px"
               />
             </div>
+          </div>
+
+          <div>
+            <div className="inline-flex items-center gap-2 bg-rose-100 rounded-full px-4 py-2 mb-6">
+              <Gift className="w-4 h-4 text-rose-500" />
+              <span className="text-sm font-semibold text-rose-600">Limited Time Offer</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 gradient-text">
+              Bring a Friend for Free
+            </h2>
+
+            <p className="text-warm-800/70 text-lg leading-relaxed mb-6">
+              Everything&apos;s better with a buddy — especially when puppies are involved.
+              Book one spot, bring a friend at absolutely no extra charge.
+            </p>
+
+            <ul className="space-y-3 mb-8">
+              {[
+                "Book one class, get a second spot free",
+                "Perfect for dates, birthdays, or girls' day out",
+                "Your friend gets the full puppy yoga experience",
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-warm-800/70">{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/book"
+              className="cta-gradient inline-block text-white px-8 py-4 rounded-full text-lg font-bold shadow-xl shadow-amber-500/25 hover:shadow-2xl hover:shadow-amber-500/30 transition-all hover:scale-105"
+            >
+              Book Now
+            </Link>
           </div>
         </div>
       </div>
@@ -481,7 +487,7 @@ function CTASection() {
           href="/book"
           className="inline-block bg-white text-amber-600 px-10 py-4 rounded-full text-lg font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105"
         >
-          Book Now — ${BRAND.price}
+          Book Now
         </Link>
       </div>
     </section>
@@ -491,6 +497,7 @@ function CTASection() {
 export default function Home() {
   return (
     <>
+      <PromoBanner />
       <Header />
       <main>
         <HeroSection />
@@ -498,7 +505,7 @@ export default function Home() {
         <GallerySection />
         <ImageBanner />
         <HowItWorksSection />
-        <DetailsSection />
+        <BringAFriendSection />
         <FAQSection />
         <CTASection />
       </main>
