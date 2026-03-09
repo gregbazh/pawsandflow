@@ -51,31 +51,14 @@ export default function BookPage() {
     return spotsRemaining[`${dateStr}-${timeId}`] ?? BRAND.spotsPerClass;
   }
 
-  async function handleCheckout() {
+  function handleCheckout() {
     if (!selectedDate || !selectedTime) return;
     setLoading(true);
-
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: selectedDate,
-          timeSlot: selectedTime,
-          timeLabel: selectedTimeObj?.label,
-        }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.message || "Checkout is not configured yet. Please set up your Stripe keys.");
-        setLoading(false);
-      }
-    } catch {
-      alert("Something went wrong. Please try again.");
-      setLoading(false);
-    }
+    const params = new URLSearchParams({
+      date: selectedDate,
+      time: selectedTimeObj?.label || "",
+    });
+    window.location.href = `/book/success?${params.toString()}`;
   }
 
   return (
