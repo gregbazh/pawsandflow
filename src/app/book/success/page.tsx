@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { PawPrint, CheckCircle2, PartyPopper, ArrowRight, CalendarDays, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { IMAGES } from "@/lib/images";
 import { Suspense } from "react";
 
 function SuccessContent() {
@@ -22,11 +24,25 @@ function SuccessContent() {
     : null;
 
   return (
-    <div className="bg-white rounded-3xl p-10 shadow-xl border border-amber-100">
-      <div className="relative inline-block mb-6">
-        <CheckCircle2 className="w-16 h-16 text-emerald-500" />
-        <PawPrint className="w-6 h-6 text-amber-500 absolute -top-1 -right-1 rotate-12" />
+    <div className="bg-white rounded-3xl shadow-xl border border-amber-100 overflow-hidden">
+      <div className="relative h-48 w-full">
+        <Image
+          src={IMAGES.successPuppy}
+          alt="Happy puppy"
+          fill
+          className="object-cover"
+          sizes="500px"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          <div className="relative inline-block">
+            <CheckCircle2 className="w-14 h-14 text-emerald-500 bg-white rounded-full" />
+            <PawPrint className="w-5 h-5 text-amber-500 absolute -top-1 -right-1 rotate-12" />
+          </div>
+        </div>
       </div>
+
+      <div className="p-10 pt-4">
 
       <h1 className="text-3xl font-extrabold gradient-text mb-3">
         You&apos;re Booked!
@@ -73,6 +89,7 @@ function SuccessContent() {
         Back to Home
         <ArrowRight className="w-4 h-4" />
       </Link>
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   PawPrint,
   CalendarDays,
@@ -22,6 +23,7 @@ import {
   formatDateLong,
   dateToString,
 } from "@/lib/constants";
+import { IMAGES } from "@/lib/images";
 
 export default function BookPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -221,12 +223,22 @@ export default function BookPage() {
             {/* Right: Summary & Checkout */}
             <div className="lg:col-span-1">
               <div className="sticky top-28 bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden">
-                <div className="cta-gradient p-6 text-white">
-                  <div className="flex items-center gap-2 mb-1">
-                    <PawPrint className="w-5 h-5" />
-                    <span className="font-bold text-lg">Your Class</span>
+                <div className="relative h-40 w-full">
+                  <Image
+                    src={IMAGES.bookingSidebar}
+                    alt="Cute puppy"
+                    fill
+                    className="object-cover"
+                    sizes="400px"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <PawPrint className="w-5 h-5" />
+                      <span className="font-bold text-lg">Your Class</span>
+                    </div>
+                    <p className="text-white/80 text-sm">Paws & Flow — Puppy Yoga</p>
                   </div>
-                  <p className="text-white/80 text-sm">Paws & Flow — Puppy Yoga</p>
                 </div>
 
                 <div className="p-6 space-y-4">
