@@ -316,7 +316,7 @@ export default function BookPage() {
                   <div className="absolute bottom-4 left-5 text-white">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <PawPrint className="w-4 h-4" />
-                      <span className="font-bold">Pups & Poses</span>
+                      <span className="font-bold">Puppy & Flow</span>
                     </div>
                     <p className="text-white/70 text-xs">Puppy Yoga · West Hollywood</p>
                   </div>

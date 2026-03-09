@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <PawPrint className="w-5 h-5 text-amber-400" />
-            <span className="font-bold text-white">Pups & Poses</span>
+            <span className="font-bold text-white">Puppy & Flow</span>
           </div>
 
           <div className="flex items-center gap-8 text-sm text-warm-200/60">
@@ -29,7 +29,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 pt-6 border-t border-warm-200/10 text-center text-xs text-warm-200/30">
-          &copy; {new Date().getFullYear()} Pups & Poses. All rights reserved.
+          &copy; {new Date().getFullYear()} Puppy & Flow. All rights reserved.
         </div>
       </div>
     </footer>

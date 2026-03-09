@@ -1,5 +1,5 @@
 export const BRAND = {
-  name: "Pups & Poses",
+  name: "Puppy & Flow",
   tagline: "Yoga. Puppies. Pure Joy.",
   description:
     "Experience the most joyful yoga class in Los Angeles — surrounded by adorable, playful puppies.",

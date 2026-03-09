@@ -13,11 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pups & Poses — Puppy Yoga in Los Angeles",
+  title: "Puppy & Flow — Puppy Yoga in Los Angeles",
   description:
     "Experience the most joyful yoga class in LA — surrounded by adorable, playful puppies. Book your spot today!",
   openGraph: {
-    title: "Pups & Poses — Puppy Yoga in Los Angeles",
+    title: "Puppy & Flow — Puppy Yoga in Los Angeles",
     description:
       "Yoga. Puppies. Pure Joy. Book your puppy yoga class in LA today!",
     type: "website",

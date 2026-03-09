@@ -9,7 +9,7 @@ export default function Header() {
       <nav className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <PawPrint className="w-7 h-7 text-amber-500" />
-          <span className="text-lg font-bold gradient-text">Pups & Poses</span>
+          <span className="text-lg font-bold gradient-text">Puppy & Flow</span>
         </Link>
 
         <div className="flex items-center gap-8">
