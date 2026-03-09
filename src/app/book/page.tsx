@@ -32,11 +32,10 @@ import { IMAGES } from "@/lib/images";
 
 function PromoBanner() {
   return (
-    <div className="bg-gradient-to-r from-amber-500 to-rose-500 text-white text-center py-2.5 px-4 text-sm font-semibold fixed top-0 left-0 right-0 z-[60]">
+    <div className="bg-foreground text-white text-center py-2.5 px-4 text-sm fixed top-0 left-0 right-0 z-[60]">
       <div className="flex items-center justify-center gap-2">
-        <Gift className="w-4 h-4" />
-        <span>Bring a Friend for FREE — Limited Time Offer!</span>
-        <Gift className="w-4 h-4" />
+        <Gift className="w-3.5 h-3.5" />
+        <span>Bring a Friend for Free — Limited Time</span>
       </div>
     </div>
   );
@@ -47,28 +46,28 @@ function ReviewCarousel() {
 
   function scroll(direction: "left" | "right") {
     if (!scrollRef.current) return;
-    const cardWidth = scrollRef.current.querySelector("div")?.offsetWidth ?? 340;
-    const gap = 16;
+    const cardWidth = scrollRef.current.querySelector("div")?.offsetWidth ?? 300;
     scrollRef.current.scrollBy({
-      left: direction === "left" ? -(cardWidth + gap) : cardWidth + gap,
+      left: direction === "left" ? -(cardWidth + 16) : cardWidth + 16,
       behavior: "smooth",
     });
   }
 
   return (
-    <div className="mt-16">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mt-20">
+      <div className="flex items-end justify-between mb-8">
         <div>
-          <h3 className="text-xl font-bold text-warm-900">
+          <p className="text-accent font-medium text-sm tracking-wide uppercase mb-2">Social Proof</p>
+          <h3 className="text-2xl font-bold text-foreground">
             What People Are Saying
           </h3>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-2">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                <Star key={i} className="w-3.5 h-3.5 text-accent fill-accent" />
               ))}
             </div>
-            <span className="text-sm text-warm-800/60">
+            <span className="text-sm text-muted">
               5.0 · {REVIEWS.length} reviews
             </span>
           </div>
@@ -76,51 +75,51 @@ function ReviewCarousel() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => scroll("left")}
-            className="w-10 h-10 rounded-full bg-white border border-amber-100 flex items-center justify-center hover:bg-amber-50 hover:border-amber-300 transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center hover:bg-subtle transition-colors cursor-pointer"
           >
-            <ChevronLeft className="w-5 h-5 text-warm-800" />
+            <ChevronLeft className="w-5 h-5 text-foreground" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="w-10 h-10 rounded-full bg-white border border-amber-100 flex items-center justify-center hover:bg-amber-50 hover:border-amber-300 transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center hover:bg-subtle transition-colors cursor-pointer"
           >
-            <ChevronRight className="w-5 h-5 text-warm-800" />
+            <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 -mx-4 px-4"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 -mx-6 px-6"
       >
         {REVIEWS.map((review, i) => (
           <div
             key={i}
-            className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white rounded-2xl border border-amber-100 overflow-hidden snap-start card-hover"
+            className="flex-shrink-0 w-[280px] sm:w-[300px] bg-white rounded-2xl overflow-hidden snap-start border border-black/5"
           >
-            <div className="relative h-64 w-full">
+            <div className="relative h-72 w-full">
               <Image
                 src={IMAGES[review.imageKey]}
                 alt={`Photo from ${review.name}`}
                 fill
                 className="object-cover"
-                sizes="320px"
+                loading="lazy"
+                sizes="300px"
               />
             </div>
             <div className="p-5">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-warm-900 text-sm">
+                <span className="font-medium text-foreground text-sm">
                   {review.name}
                 </span>
-                <span className="text-xs text-warm-800/40">{review.date}</span>
+                <span className="text-xs text-muted">{review.date}</span>
               </div>
-              <div className="flex mb-2">
+              <div className="flex mb-2.5">
                 {[...Array(review.rating)].map((_, j) => (
-                  <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  <Star key={j} className="w-3 h-3 text-accent fill-accent" />
                 ))}
               </div>
-              <p className="text-sm text-warm-800/70 leading-relaxed">
+              <p className="text-sm text-muted leading-relaxed">
                 &ldquo;{review.text}&rdquo;
               </p>
             </div>
@@ -173,49 +172,42 @@ export default function BookPage() {
     <>
       <PromoBanner />
       <Header />
-      <main className="min-h-screen pt-34 pb-16 bg-warm-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <main className="min-h-screen pt-32 pb-16 bg-subtle">
+        <div className="max-w-5xl mx-auto px-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-sm text-warm-800/50 hover:text-amber-600 transition-colors mb-8"
+            className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground transition-colors mb-10"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to home
+            Back
           </Link>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-10">
             {/* Left: Selection */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Promo callout */}
-              <div className="bg-gradient-to-r from-amber-50 to-rose-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
-                <div className="bg-white rounded-full p-2 shadow-sm">
-                  <Gift className="w-5 h-5 text-rose-500" />
+            <div className="lg:col-span-2 space-y-10">
+              {/* Promo */}
+              <div className="bg-white border border-black/5 rounded-2xl p-5 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <span className="font-semibold text-warm-900 text-sm">Bring a Friend for FREE!</span>
-                  <span className="text-warm-800/60 text-sm ml-1">Book one class, bring a friend at no extra cost.</span>
+                  <span className="font-medium text-foreground text-sm">Bring a Friend for Free</span>
+                  <span className="text-muted text-sm ml-1">— book one, bring one at no extra cost.</span>
                 </div>
               </div>
 
               {/* Step 1: Date */}
               <div>
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="cta-gradient w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    1
-                  </div>
-                  <h2 className="text-xl font-bold text-warm-900">
-                    Pick a Date
-                  </h2>
-                </div>
+                <h2 className="text-lg font-semibold text-foreground mb-5">
+                  <span className="text-accent mr-2">1.</span>
+                  Pick a Date
+                </h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {weekends.map((date) => {
                     const dateStr = dateToString(date);
                     const isSelected = selectedDate === dateStr;
-                    const dayName = date.toLocaleDateString("en-US", {
-                      weekday: "short",
-                    });
-                    const isSat = date.getDay() === 6;
+                    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
 
                     return (
                       <button
@@ -224,32 +216,17 @@ export default function BookPage() {
                           setSelectedDate(dateStr);
                           setSelectedTime(null);
                         }}
-                        className={`relative rounded-2xl p-4 text-center border-2 transition-all cursor-pointer ${
+                        className={`rounded-xl p-4 text-center transition-all cursor-pointer ${
                           isSelected
-                            ? "time-slot-selected border-transparent shadow-lg scale-[1.02]"
-                            : "bg-white border-amber-100 hover:border-amber-300 hover:shadow-md"
+                            ? "bg-foreground text-white"
+                            : "bg-white border border-black/5 hover:border-black/15"
                         }`}
                       >
-                        <div
-                          className={`text-xs font-medium mb-1 ${
-                            isSelected
-                              ? "text-white/80"
-                              : isSat
-                                ? "text-amber-500"
-                                : "text-rose-400"
-                          }`}
-                        >
+                        <div className={`text-xs font-medium mb-1 ${isSelected ? "text-white/60" : "text-muted"}`}>
                           {dayName}
                         </div>
-                        <div
-                          className={`text-lg font-bold ${
-                            isSelected ? "text-white" : "text-warm-900"
-                          }`}
-                        >
-                          {date.toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                        <div className={`text-base font-semibold ${isSelected ? "text-white" : "text-foreground"}`}>
+                          {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </div>
                       </button>
                     );
@@ -260,73 +237,45 @@ export default function BookPage() {
               {/* Step 2: Time */}
               <div
                 className={`transition-all duration-300 ${
-                  selectedDate
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-30 pointer-events-none translate-y-2"
+                  selectedDate ? "opacity-100" : "opacity-30 pointer-events-none"
                 }`}
               >
-                <div className="flex items-center gap-3 mb-5">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      selectedDate
-                        ? "cta-gradient text-white"
-                        : "bg-warm-200 text-warm-800/40"
-                    }`}
-                  >
-                    2
-                  </div>
-                  <h2 className="text-xl font-bold text-warm-900">
-                    Pick a Time
-                  </h2>
-                </div>
+                <h2 className="text-lg font-semibold text-foreground mb-5">
+                  <span className="text-accent mr-2">2.</span>
+                  Pick a Time
+                </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {CLASS_TIMES.map((time) => {
                     const isSelected = selectedTime === time.id;
-                    const spots = selectedDate
-                      ? getSpots(selectedDate, time.id)
-                      : BRAND.spotsPerClass;
+                    const spots = selectedDate ? getSpots(selectedDate, time.id) : BRAND.spotsPerClass;
                     const showSpots = spots <= 3;
 
                     return (
                       <button
                         key={time.id}
                         onClick={() => setSelectedTime(time.id)}
-                        className={`rounded-2xl p-5 text-left border-2 transition-all cursor-pointer ${
+                        className={`rounded-xl p-5 text-left transition-all cursor-pointer ${
                           isSelected
-                            ? "time-slot-selected border-transparent shadow-lg scale-[1.02]"
-                            : "bg-white border-amber-100 hover:border-amber-300 hover:shadow-md"
+                            ? "bg-foreground text-white"
+                            : "bg-white border border-black/5 hover:border-black/15"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Clock
-                              className={`w-4 h-4 ${
-                                isSelected ? "text-white/80" : "text-amber-400"
-                              }`}
-                            />
-                            <span
-                              className={`text-lg font-bold ${
-                                isSelected ? "text-white" : "text-warm-900"
-                              }`}
-                            >
+                            <Clock className={`w-4 h-4 ${isSelected ? "text-white/50" : "text-muted"}`} />
+                            <span className={`text-lg font-semibold ${isSelected ? "text-white" : "text-foreground"}`}>
                               {time.label}
                             </span>
                           </div>
-                          {isSelected && (
-                            <CheckCircle2 className="w-5 h-5 text-white" />
-                          )}
+                          {isSelected && <CheckCircle2 className="w-5 h-5 text-white/80" />}
                         </div>
                         {showSpots && (
-                          <div
-                            className={`text-sm flex items-center gap-1 mt-2 ${
-                              isSelected
-                                ? "text-white/80"
-                                : "text-rose-500 font-medium"
-                            }`}
-                          >
-                            <Users className="w-3.5 h-3.5" />
-                            Only {spots} spot{spots !== 1 ? "s" : ""} left!
+                          <div className={`text-xs mt-2 flex items-center gap-1 ${
+                            isSelected ? "text-white/60" : "text-rose font-medium"
+                          }`}>
+                            <Users className="w-3 h-3" />
+                            Only {spots} spot{spots !== 1 ? "s" : ""} left
                           </div>
                         )}
                       </button>
@@ -336,92 +285,80 @@ export default function BookPage() {
               </div>
             </div>
 
-            {/* Right: Summary & Checkout */}
+            {/* Right: Summary */}
             <div className="lg:col-span-1">
-              <div className="sticky top-38 bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden">
+              <div className="sticky top-36 bg-white rounded-2xl border border-black/5 overflow-hidden">
                 <div className="relative h-40 w-full">
                   <Image
                     src={IMAGES.bookingSidebar}
-                    alt="Cute puppy"
+                    alt="Puppy"
                     fill
                     className="object-cover"
                     sizes="400px"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <PawPrint className="w-5 h-5" />
-                      <span className="font-bold text-lg">Your Class</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute bottom-4 left-5 text-white">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <PawPrint className="w-4 h-4" />
+                      <span className="font-semibold">Paws & Flow</span>
                     </div>
-                    <p className="text-white/80 text-sm">Paws & Flow — Puppy Yoga</p>
+                    <p className="text-white/70 text-xs">Puppy Yoga · West Hollywood</p>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-4">
                   <div className="flex items-start gap-3">
-                    <CalendarDays className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                    <CalendarDays className="w-4 h-4 text-muted mt-1 shrink-0" />
                     <div>
-                      <div className="text-sm text-warm-800/50">Date</div>
-                      <div className="font-semibold text-warm-900">
-                        {selectedDateObj
-                          ? formatDateLong(selectedDateObj)
-                          : "Select a date"}
+                      <div className="text-xs text-muted">Date</div>
+                      <div className="font-medium text-foreground text-sm">
+                        {selectedDateObj ? formatDateLong(selectedDateObj) : "—"}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                    <Clock className="w-4 h-4 text-muted mt-1 shrink-0" />
                     <div>
-                      <div className="text-sm text-warm-800/50">Time</div>
-                      <div className="font-semibold text-warm-900">
-                        {selectedTimeObj
-                          ? `${selectedTimeObj.label} (1 hour)`
-                          : "Select a time"}
+                      <div className="text-xs text-muted">Time</div>
+                      <div className="font-medium text-foreground text-sm">
+                        {selectedTimeObj ? `${selectedTimeObj.label} (1 hour)` : "—"}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                    <MapPin className="w-4 h-4 text-muted mt-1 shrink-0" />
                     <div>
-                      <div className="text-sm text-warm-800/50">Location</div>
-                      <div className="font-semibold text-warm-900">
-                        {BRAND.location}
-                      </div>
-                      <div className="text-xs text-warm-800/40 mt-0.5">
-                        Exact address sent after booking
-                      </div>
+                      <div className="text-xs text-muted">Location</div>
+                      <div className="font-medium text-foreground text-sm">{BRAND.location}</div>
+                      <div className="text-xs text-muted mt-0.5">Address sent after booking</div>
                     </div>
                   </div>
 
-                  <div className="border-t border-amber-100 pt-4 mt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-warm-800/60">Puppy Yoga Class</span>
-                      <span className="font-bold text-warm-900">
-                        ${BRAND.price}.00
-                      </span>
+                  <div className="border-t border-black/5 pt-4 space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted">Puppy Yoga Class</span>
+                      <span className="font-medium text-foreground">${BRAND.price}.00</span>
                     </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-warm-800/60 text-sm">+ 1 Friend</span>
-                      <span className="font-bold text-emerald-600 text-sm">
-                        FREE
-                      </span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted">+ 1 Friend</span>
+                      <span className="font-medium text-emerald-600">FREE</span>
                     </div>
                   </div>
 
                   <button
                     onClick={handleCheckout}
                     disabled={!selectedDate || !selectedTime || loading}
-                    className={`w-full py-4 rounded-2xl text-white font-bold text-lg transition-all ${
+                    className={`w-full py-3.5 rounded-xl text-white font-medium text-base transition-all ${
                       selectedDate && selectedTime && !loading
-                        ? "cta-gradient shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] cursor-pointer"
-                        : "bg-warm-200 text-warm-800/40 cursor-not-allowed"
+                        ? "bg-foreground hover:bg-foreground/80 cursor-pointer"
+                        : "bg-black/10 text-black/30 cursor-not-allowed"
                     }`}
                   >
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         Processing...
                       </span>
                     ) : (
@@ -429,8 +366,8 @@ export default function BookPage() {
                     )}
                   </button>
 
-                  <p className="text-xs text-center text-warm-800/40">
-                    Secure checkout powered by Stripe
+                  <p className="text-xs text-center text-muted">
+                    Secure checkout · Powered by Stripe
                   </p>
                 </div>
               </div>
@@ -441,27 +378,20 @@ export default function BookPage() {
 
           {/* Mobile sticky checkout */}
           {selectedDate && selectedTime && (
-            <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white/95 backdrop-blur-md border-t border-amber-100 p-4 z-40">
+            <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white/95 backdrop-blur-xl border-t border-black/5 p-4 z-40">
               <div className="flex items-center justify-between max-w-lg mx-auto">
                 <div>
-                  <div className="font-bold text-warm-900">
-                    {selectedDateObj && formatDate(selectedDateObj)} ·{" "}
-                    {selectedTimeObj?.label}
+                  <div className="font-medium text-foreground text-sm">
+                    {selectedDateObj && formatDate(selectedDateObj)} · {selectedTimeObj?.label}
                   </div>
-                  <div className="text-sm text-warm-800/50">
-                    {BRAND.location}
-                  </div>
+                  <div className="text-xs text-muted">{BRAND.location}</div>
                 </div>
                 <button
                   onClick={handleCheckout}
                   disabled={loading}
-                  className="cta-gradient text-white px-6 py-3 rounded-full font-bold shadow-lg cursor-pointer"
+                  className="bg-foreground text-white px-6 py-2.5 rounded-full font-medium text-sm cursor-pointer"
                 >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    "Book Now"
-                  )}
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Book Now"}
                 </button>
               </div>
             </div>
