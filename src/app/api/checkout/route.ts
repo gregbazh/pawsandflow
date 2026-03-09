@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Paws & Flow — Puppy Yoga`,
+              name: `Pups & Poses — Puppy Yoga`,
               description: `${displayDate} at ${classTime?.label || timeLabel} · Los Angeles, CA`,
             },
             unit_amount: BRAND.price * 100,
