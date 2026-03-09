@@ -29,7 +29,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const available = await isSlotAvailable(date, timeSlot);
+    let available: boolean;
+    try {
+      available = await isSlotAvailable(date, timeSlot);
+    } catch (dbError) {
+      console.error("Database error:", dbError);
+      return NextResponse.json(
+        { message: "Could not check availability. Please try again." },
+        { status: 503 }
+      );
+    }
+
     if (!available) {
       return NextResponse.json(
         { message: "This class is sold out." },
@@ -75,7 +85,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error("Stripe checkout error:", error);
+    console.error("Checkout error:", error);
+
+    // Surface Stripe errors so we can debug (e.g. invalid API key, wrong permissions)
+    if (error instanceof Stripe.errors.StripeError) {
+      return NextResponse.json(
+        { message: error.message || "Stripe error." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { message: "Failed to create checkout session." },
       { status: 500 }
