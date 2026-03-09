@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { BRAND, CLASS_TIMES } from "@/lib/constants";
+import { isSlotAvailable } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -19,12 +20,20 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { date, timeSlot, timeLabel } = body;
+    const { date, timeSlot } = body;
 
     if (!date || !timeSlot) {
       return NextResponse.json(
         { message: "Missing date or time slot." },
         { status: 400 }
+      );
+    }
+
+    const available = await isSlotAvailable(date, timeSlot);
+    if (!available) {
+      return NextResponse.json(
+        { message: "This class is sold out." },
+        { status: 409 }
       );
     }
 
@@ -47,7 +56,7 @@ export async function POST(request: NextRequest) {
             currency: "usd",
             product_data: {
               name: `Puppy & Flow — Puppy Yoga`,
-              description: `${displayDate} at ${classTime?.label || timeLabel} · Los Angeles, CA`,
+              description: `${displayDate} at ${classTime?.label || timeSlot} · West Hollywood, Los Angeles`,
             },
             unit_amount: BRAND.price * 100,
           },
@@ -60,7 +69,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         date,
         timeSlot,
-        timeLabel: classTime?.label || timeLabel,
+        timeLabel: classTime?.label || timeSlot,
       },
     });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -134,36 +134,88 @@ export default function BookPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [realSpots, setRealSpots] = useState<Record<string, number> | null>(null);
+  const [loadingSpots, setLoadingSpots] = useState(false);
 
   const selectedDateObj = selectedDate ? parseDateString(selectedDate) : null;
   const selectedTimeObj = CLASS_TIMES.find((t) => t.id === selectedTime);
 
-  const spotsRemaining = useMemo(() => {
+  const fallbackSpots = useMemo(() => {
     const map: Record<string, number> = {};
-    BOOKING_WINDOWS.forEach((bookingWindow) => {
-      if (bookingWindow.status !== "available") return;
-
+    BOOKING_WINDOWS.forEach((bw) => {
+      if (bw.status !== "available") return;
       CLASS_TIMES.forEach((t) => {
-        const key = `${bookingWindow.date}-${t.id}`;
-        map[key] = BRAND.spotsPerClass - Math.floor(Math.random() * 8);
+        map[t.id] = BRAND.spotsPerClass - Math.floor(Math.random() * 8);
       });
     });
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function getSpots(dateStr: string, timeId: string): number {
-    return spotsRemaining[`${dateStr}-${timeId}`] ?? BRAND.spotsPerClass;
+  const fetchAvailability = useCallback(async (date: string) => {
+    setLoadingSpots(true);
+    try {
+      const res = await fetch(`/api/availability?date=${date}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (!data.soldOut) {
+          setRealSpots(data.spots);
+        }
+      }
+    } catch {
+      // fall back to fake spots
+    } finally {
+      setLoadingSpots(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchAvailability(selectedDate);
+    }
+  }, [selectedDate, fetchAvailability]);
+
+  function getSpots(timeId: string): number {
+    if (realSpots && realSpots[timeId] !== undefined) {
+      return realSpots[timeId];
+    }
+    return fallbackSpots[timeId] ?? BRAND.spotsPerClass;
   }
 
-  function handleCheckout() {
+  async function handleCheckout() {
     if (!selectedDate || !selectedTime) return;
     setLoading(true);
-    const params = new URLSearchParams({
-      date: selectedDate,
-      time: selectedTimeObj?.label || "",
-    });
-    window.location.href = `/book/success?${params.toString()}`;
+    setError(null);
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: selectedDate,
+          timeSlot: selectedTime,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("Failed to create checkout session.");
+        setLoading(false);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (
@@ -218,6 +270,8 @@ export default function BookPage() {
                           if (!isAvailable) return;
                           setSelectedDate(dateStr);
                           setSelectedTime(null);
+                          setRealSpots(null);
+                          setError(null);
                         }}
                         className={`rounded-2xl p-4 text-center transition-all cursor-pointer ${
                           isSelected
@@ -261,43 +315,62 @@ export default function BookPage() {
                   Pick a Time
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {CLASS_TIMES.map((time) => {
-                    const isSelected = selectedTime === time.id;
-                    const spots = selectedDate ? getSpots(selectedDate, time.id) : BRAND.spotsPerClass;
-                    const showSpots = spots <= 3;
+                {loadingSpots ? (
+                  <div className="flex items-center gap-2 text-warm-800/50 py-8">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Checking availability...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {CLASS_TIMES.map((time) => {
+                      const isSelected = selectedTime === time.id;
+                      const spots = getSpots(time.id);
+                      const isFull = spots <= 0;
+                      const showSpots = spots <= 5 && spots > 0;
 
-                    return (
-                      <button
-                        key={time.id}
-                        onClick={() => setSelectedTime(time.id)}
-                        className={`rounded-2xl p-5 text-left transition-all cursor-pointer ${
-                          isSelected
-                            ? "cta-gradient text-white shadow-lg shadow-amber-500/20"
-                            : "bg-white border border-amber-100 hover:border-amber-300"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Clock className={`w-4 h-4 ${isSelected ? "text-white/60" : "text-amber-400"}`} />
-                            <span className={`text-lg font-bold ${isSelected ? "text-white" : "text-warm-900"}`}>
-                              {time.label}
-                            </span>
+                      return (
+                        <button
+                          key={time.id}
+                          disabled={isFull}
+                          onClick={() => {
+                            if (!isFull) {
+                              setSelectedTime(time.id);
+                              setError(null);
+                            }
+                          }}
+                          className={`rounded-2xl p-5 text-left transition-all cursor-pointer ${
+                            isFull
+                              ? "bg-warm-100 border border-warm-200 text-warm-800/40 cursor-not-allowed"
+                              : isSelected
+                                ? "cta-gradient text-white shadow-lg shadow-amber-500/20"
+                                : "bg-white border border-amber-100 hover:border-amber-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Clock className={`w-4 h-4 ${isFull ? "text-warm-800/30" : isSelected ? "text-white/60" : "text-amber-400"}`} />
+                              <span className={`text-lg font-bold ${isFull ? "text-warm-800/40" : isSelected ? "text-white" : "text-warm-900"}`}>
+                                {time.label}
+                              </span>
+                            </div>
+                            {isSelected && <CheckCircle2 className="w-5 h-5 text-white/80" />}
+                            {isFull && (
+                              <span className="text-[11px] font-semibold uppercase text-red-500">Sold Out</span>
+                            )}
                           </div>
-                          {isSelected && <CheckCircle2 className="w-5 h-5 text-white/80" />}
-                        </div>
-                        {showSpots && (
-                          <div className={`text-xs mt-2 flex items-center gap-1 ${
-                            isSelected ? "text-white/60" : "text-rose-500 font-medium"
-                          }`}>
-                            <Users className="w-3 h-3" />
-                            Only {spots} spot{spots !== 1 ? "s" : ""} left
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                          {showSpots && (
+                            <div className={`text-xs mt-2 flex items-center gap-1 ${
+                              isSelected ? "text-white/60" : "text-rose-500 font-medium"
+                            }`}>
+                              <Users className="w-3 h-3" />
+                              Only {spots} spot{spots !== 1 ? "s" : ""} left
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -362,6 +435,12 @@ export default function BookPage() {
                       <span className="font-bold text-emerald-600">FREE</span>
                     </div>
                   </div>
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600 font-medium">
+                      {error}
+                    </div>
+                  )}
 
                   <button
                     onClick={handleCheckout}

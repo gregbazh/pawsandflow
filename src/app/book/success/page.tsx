@@ -1,27 +1,97 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { PawPrint, CheckCircle2, ArrowRight, CalendarDays, Clock } from "lucide-react";
+import { PawPrint, CheckCircle2, ArrowRight, CalendarDays, Clock, Loader2, AlertCircle } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { IMAGES } from "@/lib/images";
 import { Suspense } from "react";
 
+interface BookingResult {
+  success: boolean;
+  date?: string;
+  time?: string;
+  email?: string;
+  alreadyConfirmed?: boolean;
+}
+
 function SuccessContent() {
   const params = useSearchParams();
-  const date = params.get("date");
-  const time = params.get("time");
+  const sessionId = params.get("session_id");
+  const fallbackDate = params.get("date");
+  const fallbackTime = params.get("time");
 
-  const displayDate = date
-    ? new Date(date + "T12:00:00").toLocaleDateString("en-US", {
+  const [booking, setBooking] = useState<BookingResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    async function confirmBooking() {
+      setConfirming(true);
+      try {
+        const res = await fetch("/api/confirm-booking", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          setBooking(data);
+        } else {
+          setError(data.message || "Failed to confirm booking.");
+        }
+      } catch {
+        setError("Network error. Please contact us to confirm your booking.");
+      } finally {
+        setConfirming(false);
+      }
+    }
+
+    confirmBooking();
+  }, [sessionId]);
+
+  const displayDate = (booking?.date || fallbackDate)
+    ? new Date((booking?.date || fallbackDate) + "T12:00:00").toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",
         year: "numeric",
       })
     : null;
+
+  const displayTime = booking?.time || fallbackTime;
+
+  if (confirming) {
+    return (
+      <div className="bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden max-w-lg mx-auto p-16 text-center">
+        <Loader2 className="w-10 h-10 text-amber-500 animate-spin mx-auto mb-4" />
+        <p className="text-warm-800/60 font-medium">Confirming your booking...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden max-w-lg mx-auto p-16 text-center">
+        <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-4" />
+        <h1 className="text-2xl font-extrabold text-warm-900 mb-3">Booking Issue</h1>
+        <p className="text-warm-800/60 mb-8">{error}</p>
+        <Link
+          href="/book"
+          className="cta-gradient inline-flex items-center gap-2 text-white px-6 py-3 rounded-full font-bold shadow-lg"
+        >
+          Try Again
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-3xl border border-amber-100 shadow-lg overflow-hidden max-w-lg mx-auto">
@@ -52,7 +122,7 @@ function SuccessContent() {
           We can&apos;t wait to see you.
         </p>
 
-        {(displayDate || time) && (
+        {(displayDate || displayTime) && (
           <div className="bg-amber-50 rounded-2xl p-5 mb-8 space-y-3 text-left">
             {displayDate && (
               <div className="flex items-center gap-3">
@@ -60,10 +130,10 @@ function SuccessContent() {
                 <span className="font-semibold text-warm-900 text-sm">{displayDate}</span>
               </div>
             )}
-            {time && (
+            {displayTime && (
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-                <span className="font-semibold text-warm-900 text-sm">{time} (1 hour)</span>
+                <span className="font-semibold text-warm-900 text-sm">{displayTime} (1 hour)</span>
               </div>
             )}
           </div>
