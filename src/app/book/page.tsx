@@ -12,12 +12,15 @@ import {
   ArrowLeft,
   CheckCircle2,
   Loader2,
+  Star,
+  Quote,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
   BRAND,
   CLASS_TIMES,
+  REVIEWS,
   getUpcomingWeekends,
   formatDate,
   formatDateLong,
@@ -312,6 +315,59 @@ export default function BookPage() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Reviews */}
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-warm-900">
+                  What People Are Saying
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <span className="text-sm text-warm-800/60">
+                    5.0 · {REVIEWS.length} reviews
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {REVIEWS.map((review, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl border border-amber-100 p-5 card-hover relative"
+                >
+                  <Quote className="absolute top-4 right-4 w-8 h-8 text-amber-100" />
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full cta-gradient flex items-center justify-center text-white text-sm font-bold shrink-0">
+                      {review.avatar}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-warm-900 text-sm">
+                        {review.name}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[...Array(review.rating)].map((_, j) => (
+                          <Star key={j} className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        ))}
+                        <span className="text-xs text-warm-800/40 ml-1">
+                          {review.date}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-warm-800/70 leading-relaxed">
+                    &ldquo;{review.text}&rdquo;
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 

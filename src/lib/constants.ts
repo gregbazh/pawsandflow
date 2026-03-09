@@ -59,6 +59,51 @@ export function dateToString(date: Date): string {
   return date.toISOString().split("T")[0];
 }
 
+export const REVIEWS = [
+  {
+    name: "Jessica M.",
+    rating: 5,
+    text: "Literally the best experience ever. A tiny golden retriever fell asleep on my mat during savasana and I almost cried from happiness.",
+    date: "2 weeks ago",
+    avatar: "JM",
+  },
+  {
+    name: "Daniel K.",
+    rating: 5,
+    text: "Bought this for my girlfriend's birthday and she said it was the best gift she's ever received. We're already booked for next month!",
+    date: "1 week ago",
+    avatar: "DK",
+  },
+  {
+    name: "Priya S.",
+    rating: 5,
+    text: "I've done yoga for 10 years and this is hands down the most fun I've ever had in a class. The puppies are so well taken care of too.",
+    date: "3 days ago",
+    avatar: "PS",
+  },
+  {
+    name: "Marcus T.",
+    rating: 5,
+    text: "Came in stressed from work, left feeling like a completely new person. Also I'm now seriously considering adopting a puppy.",
+    date: "5 days ago",
+    avatar: "MT",
+  },
+  {
+    name: "Ashley R.",
+    rating: 5,
+    text: "The instructor was amazing and the puppies were ADORABLE. One kept licking my face during downward dog. 10/10 would recommend to everyone.",
+    date: "1 week ago",
+    avatar: "AR",
+  },
+  {
+    name: "Chris L.",
+    rating: 5,
+    text: "My friend group of 6 all went together and it was the highlight of our month. Already planning our next visit. The vibes are immaculate.",
+    date: "4 days ago",
+    avatar: "CL",
+  },
+];
+
 export const FAQ_ITEMS = [
   {
     q: "Do I need yoga experience?",
