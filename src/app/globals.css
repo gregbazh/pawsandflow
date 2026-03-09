@@ -1,15 +1,28 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #FAFAFA;
-  --color-foreground: #1d1d1f;
+  --color-background: #FFFBF5;
+  --color-foreground: #1a1a2e;
   --color-muted: #86868b;
   --color-subtle: #f5f5f7;
   --color-accent: #F59E0B;
   --color-accent-light: #FEF3C7;
   --color-rose: #F43F5E;
+  --color-amber-50: #FFFBEB;
+  --color-amber-100: #FEF3C7;
+  --color-amber-200: #FDE68A;
+  --color-amber-300: #FCD34D;
+  --color-amber-400: #FBBF24;
+  --color-amber-500: #F59E0B;
+  --color-amber-600: #D97706;
+  --color-rose-50: #FFF1F2;
+  --color-rose-100: #FFE4E6;
+  --color-rose-300: #FDA4AF;
+  --color-rose-400: #FB7185;
+  --color-rose-500: #F43F5E;
   --color-warm-50: #FFFBF5;
   --color-warm-100: #FFF5E8;
+  --color-warm-200: #FEEBD0;
   --color-warm-800: #3D2B1F;
   --color-warm-900: #2D1F14;
   --font-sans: var(--font-geist-sans);
@@ -24,7 +37,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scroll reveal — single lightweight animation */
 @keyframes reveal {
   from {
     opacity: 0;
@@ -48,7 +60,6 @@ body {
 .reveal-delay-2.visible { animation-delay: 0.2s; }
 .reveal-delay-3.visible { animation-delay: 0.3s; }
 
-/* Gradient text — kept minimal */
 .gradient-text {
   background: linear-gradient(135deg, #F59E0B 0%, #F43F5E 100%);
   -webkit-background-clip: text;
@@ -64,12 +75,14 @@ body {
   background: linear-gradient(135deg, #D97706 0%, #F43F5E 100%);
 }
 
-/* Hide scrollbar on carousels */
+.hero-gradient {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FFF1F2 50%, #FEF3C7 100%);
+}
+
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Selection color */
 ::selection {
   background: #FEF3C7;
-  color: #1d1d1f;
+  color: #1a1a2e;
 }
