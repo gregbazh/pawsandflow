@@ -21,6 +21,7 @@ interface BookingResult {
 function SuccessContent() {
   const params = useSearchParams();
   const sessionId = params.get("session_id");
+  const paymentIntentId = params.get("payment_intent");
   const fallbackDate = params.get("date");
   const fallbackTime = params.get("time");
 
@@ -29,7 +30,7 @@ function SuccessContent() {
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId && !paymentIntentId) return;
 
     async function confirmBooking() {
       setConfirming(true);
@@ -37,7 +38,9 @@ function SuccessContent() {
         const res = await fetch("/api/confirm-booking", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
+          body: JSON.stringify(
+            sessionId ? { sessionId } : { paymentIntentId }
+          ),
         });
         const data = await res.json();
 
@@ -54,7 +57,7 @@ function SuccessContent() {
     }
 
     confirmBooking();
-  }, [sessionId]);
+  }, [sessionId, paymentIntentId]);
 
   const displayDate = (booking?.date || fallbackDate)
     ? new Date((booking?.date || fallbackDate) + "T12:00:00").toLocaleDateString("en-US", {

@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import {
   PawPrint,
   CalendarDays,
@@ -19,6 +21,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CheckoutForm from "@/components/CheckoutForm";
 import {
   BRAND,
   BOOKING_WINDOWS,
@@ -29,6 +32,10 @@ import {
   parseDateString,
 } from "@/lib/constants";
 import { IMAGES } from "@/lib/images";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+);
 
 function PromoBanner() {
   return (
@@ -137,6 +144,8 @@ export default function BookPage() {
   const [error, setError] = useState<string | null>(null);
   const [realSpots, setRealSpots] = useState<Record<string, number> | null>(null);
   const [loadingSpots, setLoadingSpots] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
 
   const selectedDateObj = selectedDate ? parseDateString(selectedDate) : null;
   const selectedTimeObj = CLASS_TIMES.find((t) => t.id === selectedTime);
@@ -183,13 +192,13 @@ export default function BookPage() {
     return fallbackSpots[timeId] ?? BRAND.spotsPerClass;
   }
 
-  async function handleCheckout() {
+  async function handleBookNow() {
     if (!selectedDate || !selectedTime) return;
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -206,16 +215,23 @@ export default function BookPage() {
         return;
       }
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.clientSecret && data.paymentIntentId) {
+        setClientSecret(data.clientSecret);
+        setPaymentIntentId(data.paymentIntentId);
       } else {
-        setError("Failed to create checkout session.");
-        setLoading(false);
+        setError("Failed to start checkout.");
       }
+      setLoading(false);
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
     }
+  }
+
+  function handlePaymentCancel() {
+    setClientSecret(null);
+    setPaymentIntentId(null);
+    setError(null);
   }
 
   return (
@@ -442,24 +458,46 @@ export default function BookPage() {
                     </div>
                   )}
 
-                  <button
-                    onClick={handleCheckout}
-                    disabled={!selectedDate || !selectedTime || loading}
-                    className={`w-full py-3.5 rounded-2xl text-white font-bold text-base transition-all ${
-                      selectedDate && selectedTime && !loading
-                        ? "cta-gradient shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] cursor-pointer"
-                        : "bg-warm-200 text-warm-800/30 cursor-not-allowed"
-                    }`}
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Processing...
-                      </span>
-                    ) : (
-                      "Book Now"
-                    )}
-                  </button>
+                  {clientSecret && paymentIntentId ? (
+                    <Elements
+                      stripe={stripePromise}
+                      options={{
+                        clientSecret,
+                        appearance: {
+                          theme: "stripe",
+                          variables: {
+                            colorPrimary: "#f59e0b",
+                            borderRadius: "16px",
+                          },
+                        },
+                      }}
+                    >
+                      <CheckoutForm
+                        paymentIntentId={paymentIntentId}
+                        onCancel={handlePaymentCancel}
+                        onError={(msg) => setError(msg)}
+                      />
+                    </Elements>
+                  ) : (
+                    <button
+                      onClick={handleBookNow}
+                      disabled={!selectedDate || !selectedTime || loading}
+                      className={`w-full py-3.5 rounded-2xl text-white font-bold text-base transition-all ${
+                        selectedDate && selectedTime && !loading
+                          ? "cta-gradient shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] cursor-pointer"
+                          : "bg-warm-200 text-warm-800/30 cursor-not-allowed"
+                      }`}
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </span>
+                      ) : (
+                        "Book Now"
+                      )}
+                    </button>
+                  )}
 
                   <p className="text-xs text-center text-warm-800/40">
                     Secure checkout · Powered by Stripe
@@ -472,7 +510,7 @@ export default function BookPage() {
           <ReviewCarousel />
 
           {/* Mobile sticky checkout */}
-          {selectedDate && selectedTime && (
+          {selectedDate && selectedTime && !clientSecret && (
             <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white/95 backdrop-blur-xl border-t border-amber-100 p-4 z-40">
               <div className="flex items-center justify-between max-w-lg mx-auto">
                 <div>
@@ -482,8 +520,8 @@ export default function BookPage() {
                   <div className="text-xs text-warm-800/50">{BRAND.location}</div>
                 </div>
                 <button
-                  onClick={handleCheckout}
-                  disabled={loading}
+                  onClick={handleBookNow}
+                  disabled={loading || !selectedDate || !selectedTime}
                   className="cta-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-lg cursor-pointer"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Book Now"}

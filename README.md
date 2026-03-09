@@ -15,17 +15,20 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Stripe Setup
 
 1. Create a [Stripe account](https://dashboard.stripe.com/register)
-2. Get your **Secret Key** from [API Keys](https://dashboard.stripe.com/apikeys)
-3. Add it to `.env.local`:
+2. Get your keys from [API Keys](https://dashboard.stripe.com/apikeys)
+3. Add them to `.env.local`:
    ```
    STRIPE_SECRET_KEY=sk_test_...
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
    ```
 
 ## Deploy to Vercel
 
 1. Push this repo to GitHub
 2. Import the repo at [vercel.com/new](https://vercel.com/new)
-3. Add `STRIPE_SECRET_KEY` as an environment variable in the Vercel dashboard
+3. Add environment variables in the Vercel dashboard:
+   - `STRIPE_SECRET_KEY`
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 4. Deploy
 
 ## Class Schedule
