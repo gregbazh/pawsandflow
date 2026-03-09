@@ -78,7 +78,7 @@ function LocalBusinessJsonLd() {
       latitude: 34.0901,
       longitude: -118.3617,
     },
-    priceRange: "$55",
+    priceRange: "$54",
     openingHours: ["Sa 09:30-16:15", "Su 09:30-16:15"],
     aggregateRating: {
       "@type": "AggregateRating",
@@ -98,7 +98,7 @@ function LocalBusinessJsonLd() {
             description:
               "60-minute guided yoga class surrounded by adorable rescue puppies.",
           },
-          price: "55.00",
+          price: "54.00",
           priceCurrency: "USD",
           availability: "https://schema.org/LimitedAvailability",
         },

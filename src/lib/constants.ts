@@ -4,7 +4,7 @@ export const BRAND = {
   description:
     "Experience the most joyful yoga class in Los Angeles — surrounded by adorable, playful puppies.",
   location: "West Hollywood, Los Angeles",
-  price: 55,
+  price: 54,
   spotsPerClass: 22,
   classDurationMinutes: 60,
 };
