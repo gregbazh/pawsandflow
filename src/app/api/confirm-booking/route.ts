@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createBooking, bookingExistsForSession, isSlotAvailable } from "@/lib/db";
+import { sendConfirmationEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -111,6 +112,17 @@ export async function POST(request: NextRequest) {
     }
 
     await createBooking(date, timeSlot, stripeId, customerEmail);
+
+    if (customerEmail && timeLabel) {
+      const emailResult = await sendConfirmationEmail(
+        customerEmail,
+        date,
+        timeLabel
+      );
+      if (!emailResult.ok) {
+        console.error("Confirmation email failed:", emailResult.error);
+      }
+    }
 
     return NextResponse.json({
       success: true,
